@@ -189,7 +189,7 @@ def rescale_pred_ds(ds, transformation):
             pt['y'] = int((pt['y']-ty_padd) / sy) + ty_crop
     return ds
 
-def get_dataseries(img, annot=None, to_clean=False, post_proc=False, mask_kp_sample_interval=10, return_masks=False):
+def get_dataseries(img, annot=None, to_clean=False, post_proc=False, return_masks=False):
     """
         img: chart image as numpy array (3 channel) 
         annot: json annot object in PMC format (required for cleaning the chart image before data extraction)
@@ -220,19 +220,19 @@ def get_dataseries(img, annot=None, to_clean=False, post_proc=False, mask_kp_sam
     # annot_img = infer.draw_lines(clean_img, inst_masks)
     # plt.imshow(annot_img)
 
-    # inference data series    
+    # inference data series
     pred_ds = []
-    # print(len(inst_masks))
     for line_mask in inst_masks:
-        # print(line_mask.shape)
-        # print(len(line_mask))
-        # print(line_mask)
-        x_range = line_utils.get_xrange(line_mask)
-        line_ds = line_utils.get_kp(line_mask, interval=mask_kp_sample_interval, x_range=x_range, get_num_lines=False, get_center=True)
-        
-        line_ds = interpolate(line_ds, inter_type='linear')
-
-        pred_ds.append(line_ds)
+        ys, xs = np.nonzero(line_mask)
+        if len(xs) == 0:
+            pred_ds.append([])
+            continue
+        x_to_ys = {}
+        for x, y in zip(xs, ys):
+            x_to_ys.setdefault(x, []).append(y)
+        sorted_xs = sorted(x_to_ys.keys())
+        centerline = [{"x": x, "y": int(np.median(x_to_ys[x]))} for x in sorted_xs]
+        pred_ds.append(centerline)
 
     # Reverse that transformation on pred-ds
     if to_clean: 
