@@ -196,11 +196,7 @@ model = dict(
         with_cp=False,
         convert_weights=True,
         frozen_stages=-1,
-        init_cfg=dict(
-            type='Pretrained',
-            checkpoint=
-            'https://github.com/SwinTransformer/storage/releases/download/v1.0.0/swin_tiny_patch4_window7_224.pth'
-        )),
+        init_cfg=None),
     panoptic_head=dict(
         type='Mask2FormerHead',
         in_channels=[96, 192, 384, 768],
